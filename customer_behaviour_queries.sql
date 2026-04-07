@@ -73,3 +73,35 @@ FROM cust_seg
 GROUP BY customer_seg;
 
 --Q8. What are the top 3 most purchased products within each category?
+WITH items_purchased AS(
+SELECT 
+	category,
+	item_purchased,
+	COUNT(item_purchased) AS total_item_purchased
+FROM customer_behaviour.dbo.customer
+GROUP BY category, item_purchased
+)
+,item_ranks AS(
+SELECT
+	*,
+	ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_item_purchased DESC) AS ranking
+FROM items_purchased
+)
+SELECT 
+	*
+FROM item_ranks
+WHERE ranking <= 3;
+
+--Q9. Are customers who are repeat buyers (more than 5 previous purchases) also likely to subscribe?
+SELECT subscription_status,
+       COUNT(customer_id) AS repeat_buyers
+FROM customer_behaviour.dbo.customer
+WHERE previous_purchases > 5
+GROUP BY subscription_status;
+
+--Q10. What is the revenue contribution of each age group? 
+SELECT 
+	age_group,
+	SUM(purchase_amount) AS total_revenue
+FROM customer_behaviour.dbo.customer
+GROUP BY age_group;
